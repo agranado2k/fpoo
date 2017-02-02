@@ -30,3 +30,18 @@
 (prn (send-to my-point :y))
 (prn (send-to my-point :shift -1 -100))
 (prn (send-to my-point :add (make Point -1 -100)))
+
+
+
+;;;;;;
+(def Point
+  {
+    :__instance_methods__ {
+      :add-instance-values (fn [this x y]
+        (assoc this :x x :y y))
+
+      :shift (fn [this xinc yinc]
+        (make Point (+ (:x this) xinc)
+                    (+ (:y this) yinc)))
+    }
+    })
