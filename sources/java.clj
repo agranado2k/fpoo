@@ -90,3 +90,55 @@
      (fn [instance message & args]
        (apply-message-to (class-from-instance instance)
                          instance message args)))
+
+
+
+;; Recursion Exercices
+;; Exercise 1
+(def factorial
+    (fn [n]
+      (if (or (= n 1) (= n 0))
+        1
+        (* n
+          (factorial
+            (- n 1))))))
+
+;; Exercise 2
+(def factorial-1
+  (fn [something so-far]
+    (if (or (= something 1) (= something 0))
+      so-far
+      (recur (- something 1)
+        (* something so-far)))))
+
+;; Exercise 3
+(def recursive-function
+    (fn [something so-far]
+      (if (empty? something)
+        so-far
+        (recursive-function (rest something)
+          (+ (first something) so-far)))))
+
+
+(recursive-function [1 2 3 4] 0)
+
+;; Exercise 4
+
+(def recursive-function
+    (fn [op something so-far]
+      (if (empty? something)
+        so-far
+        (recursive-function op (rest something)
+          (op (first something) so-far)))))
+
+(recursive-function * [1 2 3 4] 1)
+
+;; Exercise 5
+
+(recursive-function (fn [elm so-far] 
+                      (assoc so-far elm (count so-far)) )
+    [:a :b :c]
+    {})
+
+
+
