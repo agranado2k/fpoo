@@ -159,3 +159,36 @@
   }
  })
 
+(def apply-message-to
+     (fn [class instance message args]
+       (let [method (message (method-cache class))]
+            (if (nil? method)
+              (apply-message-to MissingOverrider instance :method-missing [message args])
+              (apply method instance args)))))
+
+(send-to point :the-name-of-no-method 1 2)
+
+;;; Exercise 2
+
+(def a-point (send-to Point :new 1 2))
+(send-to a-point :some-method)
+(send-to Point :some-method)
+(send-to Anything :some-method)
+(send-to MetaAnything :some-method)
+
+
+(def MetaAnything
+    (assoc MetaAnything :__superclass_symbol__ 'Anything))
+
+
+;;; Exercise 3
+(def MetaAnything
+    (assoc MetaAnything :__class_symbol__ 'Anything))
+
+(def MetaPoint
+    (assoc MetaPoint :__class_symbol__ 'Anything))
+
+(send-to MetaAnything :to-string) ;;works!!!
+
+(try (send-to MetaPoint :new)
+(catch Error e))  
