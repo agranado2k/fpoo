@@ -218,3 +218,142 @@
                  (send-to this :<= upper)))})
 
 )
+
+
+;;Exercise 1
+
+;; Module
+(install (method-holder 'Module,
+                        :left 'MetaModule,
+                        :up 'Anything,
+                        {
+                          :include
+                           (fn [this module]
+                            (str "Module " (:__own_symbol__ module) " will someday be included into " (:__own_symbol__ this)) 
+                            )
+                         }))
+
+;;MetaModule
+(install
+ (invisible
+  (method-holder 'MetaModule,
+                 :left 'Klass,
+                 :up 'Anything,
+                 {
+                  :new
+                   (fn [class args]
+                    {:__own_symbol__ args} 
+                    )
+                })))
+
+;; Prove
+
+(def Kuddlesome (send-to Module :new 'Kuddlesome))
+Kuddlesome
+;;{:__own_symbol__ Kuddlesome})
+(send-to Trilobite :include Kuddlesome)
+;;"Module Kuddlesome will someday be included into Trilobite"
+
+;;Exercise 2
+
+;;MetaModule
+(install
+ (invisible
+  (method-holder 'MetaModule,
+                 :left 'Klass,
+                 :up 'Anything,
+                 {
+                  :new
+                   (fn [this
+                       new-module-symbol module-methods]
+                  ;; Class
+                  (install
+                   (method-holder new-module-symbol
+                                :left 'Module
+                                :up nil
+                                module-methods)))
+                })))
+
+
+;;Prove
+(send-to Module :new 'Kuddlesome
+                    {:be_stroked (fn [this] "purrrrrrr....")})
+
+
+;;Exercise 3
+
+;; Module
+(install (method-holder 'Module,
+                        :left 'MetaModule,
+                        :up 'Anything,
+                        {
+                          :include
+                           (fn [this module]
+                              (let [module-name (:__own_symbol__ module)
+                                    stub-name (gensym module-name)
+                                    stub {
+                                        :__own_symbol__ stub-name
+                                        :__up_symbol__ (:__up_symbol__ this)
+                                        :__left_symbol__ module-name
+                                      }]
+                                  (install (assoc this :__up_symbol__ stub-name))
+                                  (install stub)
+                              )
+                            )
+                         }))
+
+
+;;Prove
+(:__up_symbol__ Trilobite)
+;;Anything
+(send-to Trilobite :include Kuddlesome)
+(:__up_symbol__ Trilobite)
+;;Kuddlesome73
+(:__up_symbol__ Kuddlesome73)
+;;Anything
+(:__left_symbol__ Kuddlesome73)
+;;Kuddlesome
+
+
+
+;;Exercise 4
+(install
+ (method-holder 'Module
+                :left 'MetaModule
+                :up 'Anything
+                {
+                 :include
+                 (fn [this module]
+                   (let [module-name (:__own_symbol__ module)
+                         stub-name (gensym module-name)
+                         stub {:__own_symbol__ stub-name
+                               :__up_symbol__ (:__up_symbol__ this)
+                               :__left_symbol__ module-name
+                               :__module_stub?__ true}]              ;;<<== New
+                     (install (assoc this :__up_symbol__ stub-name))
+                     (install stub)))
+               }))
+
+
+(def names-module-stub?
+     (fn [symbol]
+       (:__module_stub?__ (eval symbol))))
+
+(def method-holder-symbol-to-left
+     (fn [symbol]
+       (assert (symbol? symbol))
+       (:__left_symbol__ (eval symbol))))
+
+(def lineage-1
+     (fn [symbol so-far]
+       (cond (nil? symbol)
+             so-far
+
+             (names-module-stub? symbol)
+             (lineage-1 (method-holder-symbol-above symbol)
+                        (concat (lineage (method-holder-symbol-to-left symbol))
+                                so-far))
+
+             :else 
+             (lineage-1 (method-holder-symbol-above symbol)
+                        (cons symbol so-far)))))
