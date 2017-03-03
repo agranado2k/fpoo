@@ -327,3 +327,62 @@
          })
 
 "clueby 0.1 (2012-10-02 patchlevel 0)"
+
+;; Exercise 1
+(def ^:dynamic holder-of-current-method nil)
+(def ^:dynamic current-message nil)
+(def ^:dynamic current-arguments)
+
+;;my solution
+(def find-containing-holder-symbol
+  (fn [symbol method-holder]
+    (let [symbol-list (reverse (lineage (:__own_symbol__ (eval symbol))))
+          fist-symbol (first symbol-list)
+          class-methods (:__methods__ (eval fist-symbol))]
+      (if (nil? (class-methods method-holder))
+        (if (nil? (second symbol-list))
+          nil
+          (find-containing-holder-symbol (second symbol-list) method-holder))
+        fist-symbol
+        )
+    )
+  )
+)
+
+(def apply-message-to
+     (fn [method-holder instance message args]
+       (let [method (message (:__methods__ (eval (find-containing-holder-symbol (:__own_symbol__ method-holder) message))))]
+         (if method
+           (binding [this instance] 
+            (apply method args))
+           (send-to instance :method-missing message args)))))
+
+
+;; book solution
+(def find-containing-holder-symbol
+     (fn [first-candidate message]
+       (first (filter (fn [holder-symbol]
+                        (message (held-methods holder-symbol)))
+                      (reverse (lineage first-candidate)) ))))
+
+
+(def apply-message-to
+     (fn [method-holder instance message args]
+       (let [target-holder (find-containing-holder-symbol (:__own_symbol__ method-holder)
+                                                          message)]
+         (if target-holder
+           (binding [this instance]
+             (apply (message (held-methods target-holder)) args))
+           (send-to instance :method-missing message args)))))
+
+;; Prove
+(find-containing-holder-symbol 'Point :shift)
+;;Point
+;; The following case is important: make sure you
+;; get the *first* method holder, not the last.
+(find-containing-holder-symbol 'Point :to-string)
+;;Point
+(find-containing-holder-symbol 'Point :class-name)
+;;Anything
+(find-containing-holder-symbol 'Point :nonsense)
+;;nil
