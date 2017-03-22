@@ -21,7 +21,7 @@
             courses)))
 
 (def note-unavailability
-     (fn [courses instructor-count]
+     (fn [courses instructor-count registrant]
        (let [out-of-instructors?
              (= instructor-count
                 (count (filter (fn [course] (not (:empty? course)))
@@ -30,7 +30,11 @@
                 (assoc course
                        :unavailable? (or (:full? course)
                                          (and out-of-instructors?
-                                              (:empty? course)))))
+                                              (:empty? course))
+                                         (and (:manager registrant)                 
+                                              (not (:morning? course)))
+                                         (not (superset? )                 
+                                              ))))
               courses))))
 
 (def annotate
@@ -46,11 +50,11 @@
          note-unavailability domain instructor-count)))
 
 (def annotate
-     (fn [courses registrants-courses instructor-count]
+     (fn [courses registrants instructor-count]
        (-> courses
-           (answer-annotations registrants-courses)
+           (answer-annotations (:taking-nowregistrants)
            domain-annotations
-           (note-unavailability instructor-count))))
+           (note-unavailability instructor-count registrant))))
 
 
 

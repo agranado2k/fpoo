@@ -38,3 +38,12 @@
 ;; (upc? "722252601404") ;; This one is incorrect.
 
 
+;; Exercise 2
+
+(def separate (juxt filter remove))
+
+;; Exercise 7
+
+(def check-sum (fn [number]
+    (map )
+  ))
